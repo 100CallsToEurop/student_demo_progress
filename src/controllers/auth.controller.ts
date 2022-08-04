@@ -54,7 +54,7 @@ export class AuthController{
         if(user){
             const token = await jwtService.createJWT(user)
             res.cookie('refreshToken', token.refreshToken, {
-                maxAge: 20 * 1000,
+                maxAge: 60 * 60 * 1000,
                 httpOnly: true,
                 secure: true
             });

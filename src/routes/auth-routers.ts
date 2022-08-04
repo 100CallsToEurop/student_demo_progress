@@ -48,8 +48,6 @@ authRouter.post('/refresh-token',
     authController.refreshTokenUser.bind(authController))
 
 authRouter.post('/logout',
-    authMiddlewareJWT,
-    inputValidatorMiddleware,
     authController.logoutUser.bind(authController))
 
 authRouter.get('/me',
