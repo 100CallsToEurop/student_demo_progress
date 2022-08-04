@@ -4,7 +4,7 @@ import {jwtService} from "../applications/jwt-service";
 export const validRefreshToken = async (req: Request, res: Response, next: NextFunction) => {
    if(req.cookies?.refreshToken){
        const token = req.cookies.refreshToken
-       if(!token  || await jwtService.expToken(token) === false || !await jwtService.getUserIdByToken(token)){
+       if(!token  || !jwtService.expToken(token)){
            res.send(401)
            return
        }

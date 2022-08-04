@@ -20,16 +20,12 @@ export const jwtService = {
       }
    },
 
-   async expToken(token: string){
-      try {
-         const { exp } = jwt.decode(token) as {
-            exp: number;
-         };
-         const expirationDatetimeInSeconds = exp * 1000;
-         if(Date.now() >= expirationDatetimeInSeconds) return false
+   expToken(token: string){
+      try{
+         const result: any = jwt.verify(token, '123')
          return true
-      } catch {
-         return false;
+      }catch(err){
+         return false
       }
    }
 }
