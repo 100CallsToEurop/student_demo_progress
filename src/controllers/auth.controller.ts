@@ -17,7 +17,7 @@ export class AuthController{
 
     async registrationUsers(req: Request, res: Response){
         const {login, email, password}: UserInputModel = req.body
-        const user = await this.usersService.createUser({login, email, password})
+        const user = await this.authService.createUser({login, email, password})
         if(user){
             res.status(204).send(204)
             return
@@ -50,7 +50,7 @@ export class AuthController{
 
     async loginUser(req: Request, res: Response){
         const {login, password}: LoginInputModel = req.body
-        const user = await this.usersService.checkCredentials({login, password})
+        const user = await this.authService.checkCredentials({login, password})
         if(user){
             const token = await jwtService.createJWT(user)
             res.cookie('refreshToken', token.refreshToken, {

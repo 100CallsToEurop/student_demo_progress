@@ -1,14 +1,51 @@
 import "reflect-metadata"
-import {UserAccount} from "../types/user.type";
+import {UserAccount, UserInputModel, UserViewModel} from "../types/user.type";
 import {emailManager} from "../managers/registration-user";
 import {v4 as uuidv4} from "uuid";
 import {UsersRepository} from "../repositories/users-repository-db";
 import {injectable} from "inversify";
 import {ObjectId} from "mongodb";
+import {UserServiceClass} from "./classes/user.service.class";
+import add from "date-fns/add";
+import {LoginInputModel} from "../types/login.type";
+import bcrypt from "bcrypt";
 
 @injectable()
 export class AuthService{
     constructor(private usersRepository: UsersRepository){}
+
+    async createUser(userParam: UserInputModel): Promise<UserViewModel | null>{
+        const passwordHash = await this._generateHash(userParam.password)
+        const newUser = new UserServiceClass(
+            new ObjectId(),
+            {
+                userName: userParam.login,
+                email: userParam.email,
+                passwordHash,
+                createAt: new Date()
+            },
+            {
+                confirmationCode: uuidv4(),
+                expirationDate: add(new Date(), {
+                    hours: 1,
+                    minutes: 3
+                }),
+                isConfirmed: false
+            }
+        )
+        await this.usersRepository.createUser(newUser)
+        try{
+            await emailManager.sendEmailConfirmationMessage(newUser)
+        }catch(err){
+            console.log(err)
+            //await usersRepository.deleteUserById(newUser._id)
+            return null
+        }
+        return {
+            id: newUser._id.toString(),
+            login: newUser.accountData.userName,
+        }
+    }
 
     async findUserForConfirm(code: string){
         const user = await this.usersRepository.findByConfirmCode(code)
@@ -43,5 +80,34 @@ export class AuthService{
             login: user.accountData.userName,
         }
 
+    }
+
+    async checkCredentials(loginParam: LoginInputModel): Promise<UserViewModel | null>{
+        const user = await this.usersRepository.findByLogin(loginParam.login)
+        if(!user) {
+            return null
+        }
+
+        if(!user.emailConfirmation.isConfirmed){
+            return null
+        }
+
+        const isHashedEquals = await this._isPasswordCorrect(loginParam.password, user.accountData.passwordHash)
+        if(isHashedEquals) return {
+            id: user._id.toString(),
+            login: user.accountData.userName
+        }
+        return null
+    }
+
+    async _generateHash(password: string){
+        const salt = await bcrypt.genSalt(10)
+        const hash = await bcrypt.hash(password, salt)
+        return hash
+    }
+
+    async _isPasswordCorrect(password: string, hash: string){
+        const isEqual = await bcrypt.compare(password, hash)
+        return isEqual
     }
 }

@@ -31,17 +31,10 @@ export class UsersService{
                     hours: 1,
                     minutes: 3
                 }),
-                isConfirmed: false
+                isConfirmed: true
             }
         )
         await this.usersRepository.createUser(newUser)
-        try{
-            await emailManager.sendEmailConfirmationMessage(newUser)
-        }catch(err){
-            console.log(err)
-            //await usersRepository.deleteUserById(newUser._id)
-            return null
-        }
         return {
             id: newUser._id.toString(),
             login: newUser.accountData.userName,
@@ -77,24 +70,6 @@ export class UsersService{
 
     async deleteUserById(id: ObjectId){
         return await this.usersRepository.deleteUserById(id)
-    }
-
-    async checkCredentials(loginParam: LoginInputModel): Promise<UserViewModel | null>{
-        const user = await this.usersRepository.findByLogin(loginParam.login)
-        if(!user) {
-            return null
-        }
-
-        if(!user.emailConfirmation.isConfirmed){
-            return null
-        }
-
-        const isHashedEquals = await this._isPasswordCorrect(loginParam.password, user.accountData.passwordHash)
-        if(isHashedEquals) return {
-            id: user._id.toString(),
-            login: user.accountData.userName
-        }
-        return null
     }
 
     async _generateHash(password: string){
