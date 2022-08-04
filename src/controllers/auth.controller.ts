@@ -85,7 +85,7 @@ export class AuthController{
     }
 
     async meUser(req: Request, res: Response){
-        const user = await this.usersService.findUserById(req.user!._id)
+        const user = await this.usersService.getMe(req.user!._id)
         if(user){
             res.status(200).json(user)
             return
