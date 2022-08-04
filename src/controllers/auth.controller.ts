@@ -65,10 +65,8 @@ export class AuthController{
     }
 
     async refreshTokenUser(req: Request, res: Response){
-        console.log(1)
         const user = await this.usersService.findUserById(req.user!._id)
         if(user){
-            console.log(2)
             const token = await jwtService.createJWT(user)
             res.cookie('refreshToken', token.refreshToken, {
                 maxAge: 20 * 1000,
