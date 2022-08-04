@@ -14,7 +14,6 @@ export const authMiddlewareJWT = async (req: Request, res: Response, next: NextF
     if(userId){
         const usersService = new UsersRepository()
         req.user = await usersService.findUserById(new ObjectId(userId))
-        console.log(req.user)
         next()
         return
     }
