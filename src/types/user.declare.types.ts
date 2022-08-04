@@ -1,10 +1,11 @@
-import {UserViewModel} from "./user.type";
+
+import {IUser} from "../models/user.model";
 
 
 declare global {
     namespace Express {
         export interface Request {
-            user: UserViewModel | null
+            user: IUser | null
         }
     }
 }

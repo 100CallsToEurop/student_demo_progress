@@ -1,19 +1,29 @@
-import {postsRepository} from "../repositories/posts-repository-db";
-import {bloggersService} from "./bloggers.service";
+import "reflect-metadata"
 import {PaginationPosts, PostInputModel, PostModel, PostQuery, PostViewModel} from "../types/post.type";
 import {ObjectId} from "mongodb";
+import {injectable} from "inversify";
+import {PostsRepository} from "../repositories/posts-repository-db";
+import {BloggersService} from "./bloggers.service";
+import {IPost} from "../models/post.model";
 
-export const postsService = {
+@injectable()
+export class PostsService{
+
+    constructor(
+        private postsRepository: PostsRepository,
+        private bloggersService: BloggersService
+    ) {}
+
     async getPosts(queryParams?: PostQuery): Promise<PaginationPosts | null> {
         if(queryParams?.id !== undefined) {
-            const bloggers = await bloggersService.getBloggerById(new ObjectId(queryParams?.id))
+            const bloggers = await this.bloggersService.getBloggerById(new ObjectId(queryParams?.id))
             if (!bloggers) return null
         }
-        return await postsRepository.getPosts(queryParams)
-    },
+        return await this.postsRepository.getPosts(queryParams)
+    }
 
     async getPostById(id: ObjectId): Promise<PostViewModel | null> {
-        const post = await postsRepository.getPostById(id)
+        const post = await this.postsRepository.getPostById(id)
         if(!post) return null
         return {
             id: post._id.toString(),
@@ -23,27 +33,27 @@ export const postsService = {
             bloggerId: post.bloggerId,
             bloggerName: post.bloggerName
         }
-    },
+    }
     async deletePostById(id: ObjectId): Promise<boolean> {
-        return await postsRepository.deletePostById(id)
-    },
+        return await this.postsRepository.deletePostById(id)
+    }
     async updatePostById(id: ObjectId, updatePost: PostInputModel): Promise<boolean | null> {
-        const blogger = await bloggersService.getBloggerById(new ObjectId(updatePost.bloggerId))
-        if (blogger) return await postsRepository.updatePostById(id, updatePost)
+        const blogger = await this.bloggersService.getBloggerById(new ObjectId(updatePost.bloggerId))
+        if (blogger) return await this.postsRepository.updatePostById(id, updatePost)
         return null
 
-    },
+    }
     async createPost(createParam: PostInputModel):Promise<PostViewModel | null>  {
 
-        const blogger = await bloggersService.getBloggerById(new ObjectId(createParam.bloggerId))
+        const blogger = await this.bloggersService.getBloggerById(new ObjectId(createParam.bloggerId))
         if(!blogger) return null
 
-        const newPost: PostModel = {
+        const newPost: IPost = {
             ...createParam,
             _id: new ObjectId(),
             bloggerName: blogger.name
         }
-        await postsRepository.createPost(newPost)
+        await this.postsRepository.createPost(newPost)
         return {
             id: newPost._id.toString(),
             title: newPost.title,

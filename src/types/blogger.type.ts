@@ -1,7 +1,6 @@
 import {PostInputModel} from "./post.type";
 import {Query} from "./query.type";
 import {Pagination} from "./pagination.types";
-import {ObjectId} from "mongodb";
 
 export type BloggerInputModel = {
     name: string,
@@ -9,12 +8,6 @@ export type BloggerInputModel = {
 }
 export type BloggerViewModel = BloggerInputModel & {
     id: string,
-}
-
-export type BloggerModel = {
-    _id: ObjectId
-    name: string,
-    youtubeUrl: string
 }
 
 export type BloggerPostInputModel = Omit<PostInputModel, 'bloggerId'>

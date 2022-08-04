@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import bodyParser from 'body-parser'
-
+import cookieParser from 'cookie-parser'
 //Routers
 import {bloggersRouter} from "./routes/bloggers-routes";
 import {postsRouter} from "./routes/posts-routes";
@@ -20,6 +20,7 @@ const port = process.env.PORT || 5000
 const app = express()
 
 app.use(cors())
+app.use(cookieParser());
 app.use(jsonMiddleware)
 app.set('trust proxy', true);
 

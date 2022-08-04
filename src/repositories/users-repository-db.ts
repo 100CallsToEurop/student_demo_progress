@@ -1,23 +1,25 @@
-import {usersCollection} from "./db";
-import {PaginationUsers, UserAccount, UserQuery, UserViewModel} from "../types/user.type";
+import "reflect-metadata"
+import {PaginationUsers, UserAccount, UserQuery} from "../types/user.type";
 import {ObjectId} from "mongodb";
+import {IUser, UserModel} from "../models/user.model";
+import {injectable} from "inversify";
 
-export const usersRepository = {
 
+@injectable()
+export class UsersRepository{
     async getUsers(queryParams?: UserQuery): Promise<PaginationUsers> {
-
-        let pageNumber = Number(queryParams?.PageNumber) || 1
-        let pageSize = Number(queryParams?.PageSize) || 10
-        const skip: number = (pageNumber-1) * pageSize
-        let count = await usersCollection.countDocuments()
-        const filter = {}
-        const items = await usersCollection.find(filter).skip(skip).limit(pageSize).toArray()
-
-        const result: PaginationUsers = {
-            pagesCount: Math.ceil(count/pageSize),
-            page: pageNumber,
-            pageSize: pageSize,
-            totalCount: count,
+        let totalCount = await UserModel.count()
+        const filter = UserModel.find()
+        const page = Number(queryParams?.PageNumber) || 1
+        const pageSize = Number(queryParams?.PageSize) || 10
+        const skip: number = (page-1) * pageSize
+        const pagesCount = Math.ceil(totalCount/pageSize)
+        const items = await UserModel.find(filter).skip(skip).limit(pageSize).lean()
+        return {
+            pagesCount,
+            page,
+            pageSize,
+            totalCount,
             items: items.map(item =>{
                 return{
                     id: item._id.toString(),
@@ -25,64 +27,68 @@ export const usersRepository = {
                 }
             })
         }
-        return result
-    },
+    }
 
-    async createUser(createParam: UserAccount): Promise<UserAccount>{
-        await usersCollection.insertOne(createParam)
-        return createParam
-    },
+    async findUserById(_id: ObjectId): Promise<IUser | null>{
+        return UserModel.findOne({_id})
+    }
 
-    async findUserById(_id: ObjectId): Promise<UserAccount | null>{
-        const user = await usersCollection.findOne({_id})
-        if(user) return user
-        return null
-    },
+    async findByLogin(login: string): Promise<IUser | null>{
+        return UserModel.findOne().where({"accountData.userName": login})
+    }
 
-    async findByLogin(login: string): Promise<UserAccount | null>{
-        const user = await usersCollection.findOne({"accountData.userName": login})
-        if(user) return user
-        return null
-    },
+    async findUserByEmail(email: string): Promise<IUser | null>{
+        return UserModel.findOne().where({"accountData.email": email})
+    }
 
-    async findUserByEmail(email: string): Promise<UserAccount | null>{
-        const user = await usersCollection.findOne({"accountData.email": email})
-        if(user) return user
-        return null
-    },
-
-    async checkUserEmailOrLogin(LoginOrEmail: string): Promise<UserAccount | null>{
-        const user = await usersCollection.findOne({
+    async checkUserEmailOrLogin(LoginOrEmail: string): Promise<IUser | null>{
+        return UserModel.findOne().where({
             $or:
                 [
                     {"accountData.userName": LoginOrEmail},
                     {"accountData.email": LoginOrEmail}
                 ]
         })
-        if(user) return user
-        return null
-    },
+    }
 
-    async findByConfirmCode(code: string): Promise<UserAccount | null>{
-        console.log(0,5)
-        const user = await usersCollection.findOne({"emailConfirmation.confirmationCode": code} )
-        if(user) return user
-        return null
-    },
-
-
-    async updateConfirmationState(_id: ObjectId): Promise<boolean>{
-        const result = await usersCollection.updateOne({_id}, {$set: {'emailConfirmation.isConfirmed': true}})
-        return result.modifiedCount === 1
-    },
-
-    async updateConfirmationCode(_id: ObjectId, code: string): Promise<boolean>{
-        const result = await usersCollection.updateOne({_id}, {$set: {'emailConfirmation.confirmationCode': code}})
-        return result.modifiedCount === 1
-    },
+    async findByConfirmCode(code: string): Promise<IUser | null>{
+        return UserModel.findOne().where({"emailConfirmation.confirmationCode": code})
+    }
 
     async deleteUserById(_id: ObjectId): Promise<boolean> {
-        const result = await usersCollection.deleteOne({_id})
-        return result.deletedCount === 1
-    },
+        const userInstance = await UserModel.findOne({_id})
+        if(!userInstance) return false
+        await userInstance.delete({_id})
+        return true
+    }
+
+    async updateConfirmationState(_id: ObjectId): Promise<boolean>{
+        const userInstance = await UserModel.findOne({_id})
+        if(!userInstance) return false
+        userInstance.emailConfirmation.isConfirmed = true,
+            await userInstance.save()
+        return true
+    }
+
+    async updateConfirmationCode(_id: ObjectId, code: string): Promise<boolean>{
+        const userInstance = await UserModel.findOne({_id})
+        if(!userInstance) return false
+        userInstance.emailConfirmation.confirmationCode = code,
+            await userInstance.save()
+        return true
+    }
+    async createUser(createParam: IUser): Promise<IUser>{
+        const userInstance = new UserModel()
+        userInstance.accountData.userName = createParam.accountData.userName
+        userInstance.accountData.email = createParam.accountData.email
+        userInstance.accountData.passwordHash = createParam.accountData.passwordHash
+        userInstance.accountData.createAt = createParam.accountData.createAt
+        userInstance.emailConfirmation.confirmationCode = createParam.emailConfirmation.confirmationCode
+        userInstance.emailConfirmation.expirationDate = createParam.emailConfirmation.expirationDate
+        userInstance.emailConfirmation.isConfirmed = createParam.emailConfirmation.isConfirmed
+        await userInstance.save()
+        return createParam
+    }
 }
+
+export const usersRepository = new UsersRepository()

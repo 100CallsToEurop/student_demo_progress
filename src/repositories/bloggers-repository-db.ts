@@ -1,34 +1,39 @@
-import {bloggersCollection, commentsCollection, postsCollection} from "./db";
+import "reflect-metadata"
 import {
     BloggerInputModel,
-    BloggerModel,
-    BloggerQuery, BloggerViewModel,
+    BloggerQuery,
     PaginationBloggers
 } from "../types/blogger.type";
 import {ObjectId} from "mongodb";
 
-export const bloggersRepository = {
+import {BloggerModel, IBlogger} from "../models/blogger.model"
+import {PostsModel} from "../models/post.model";
+import {CommentModel} from "../models/comment.model";
+import {injectable} from "inversify";
+
+
+
+@injectable()
+export class BloggersRepository{
     async getBloggers(queryParams?: BloggerQuery): Promise<PaginationBloggers> {
-
-        let pageNumber = Number(queryParams?.PageNumber) || 1
-        let pageSize = Number(queryParams?.PageSize) || 10
-        const skip: number = (pageNumber-1) * pageSize
-        let count = await bloggersCollection.countDocuments()
-
-        let filter: any = {}
+        let totalCount = await BloggerModel.count()
+        let filter = BloggerModel.find()
         if(queryParams?.SearchNameTerm){
-            filter['name'] = {$regex: queryParams.SearchNameTerm}
-            count = (await bloggersCollection.find(filter).toArray()).length
+            filter.where("name").regex(queryParams?.SearchNameTerm)
+            totalCount = (await BloggerModel.find(filter).lean()).length
         }
 
-        const items = await bloggersCollection.find(filter).skip(skip).limit(pageSize).toArray()
+        const page = Number(queryParams?.PageNumber) || 1
+        const pageSize = Number(queryParams?.PageSize) || 10
+        const skip: number = (page-1) * pageSize
+        const pagesCount = Math.ceil(totalCount/pageSize)
+        const items = await BloggerModel.find(filter).skip(skip).limit(pageSize).lean()
 
-
-        const result: PaginationBloggers = {
-            pagesCount: Math.ceil(count/pageSize),
-            page: pageNumber,
-            pageSize: pageSize,
-            totalCount: count,
+        return {
+            pagesCount,
+            page,
+            pageSize,
+            totalCount,
             items: items.map(item =>{
                 return{
                     id: item._id.toString(),
@@ -37,26 +42,38 @@ export const bloggersRepository = {
                 }
             })
         }
+    }
 
-        return result
-    },
-    async getBloggerById(_id: ObjectId): Promise<BloggerModel | null> {
-       const blogger = await bloggersCollection.findOne({_id})
-        return blogger
-
-    },
+    async getBloggerById(_id: ObjectId): Promise<IBlogger | null> {
+        return BloggerModel.findOne({_id})
+    }
     async deleteBloggerById(_id: ObjectId): Promise<boolean> {
-        const result = await bloggersCollection.deleteOne(_id)
-        await postsCollection.deleteMany({bloggerId: _id.toString()})
-        await commentsCollection.deleteMany({userId: _id.toString()})
-        return result.deletedCount === 1
-    },
+        const postInstance = await PostsModel.findOne({bloggerId: _id.toString()})
+        if(postInstance){
+            const commentInstance = await CommentModel.findOne({postId: postInstance._id})
+            if(commentInstance){
+                await commentInstance.delete({_id: commentInstance._id})
+            }
+            await postInstance.delete({bloggerId: _id.toString()})
+        }
+        const bloggerInstance = await BloggerModel.findOne({_id})
+        if(!bloggerInstance) return false
+        await bloggerInstance.delete({_id})
+        return true
+    }
     async updateBloggerById(_id: ObjectId, updateParam: BloggerInputModel): Promise<boolean> {
-        const result = await bloggersCollection.updateOne({_id}, { $set: updateParam})
-        return result.matchedCount === 1
-    },
-    async createBlogger(createParam: BloggerModel): Promise<BloggerModel>{
-        await bloggersCollection.insertOne(createParam)
-        return createParam
+        const bloggerInstance = await BloggerModel.findOne({_id})
+        if(!bloggerInstance) return false
+        bloggerInstance.name = updateParam.name
+        bloggerInstance.youtubeUrl = updateParam.youtubeUrl
+        await bloggerInstance.save()
+        return true
+    }
+    async createBlogger(createParam: IBlogger): Promise<IBlogger>{
+        const bloggerInstance = new BloggerModel()
+        bloggerInstance.name = createParam.name
+        bloggerInstance.youtubeUrl = createParam.youtubeUrl
+        await bloggerInstance.save()
+        return bloggerInstance
     }
 }

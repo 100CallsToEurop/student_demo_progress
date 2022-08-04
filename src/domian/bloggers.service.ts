@@ -1,40 +1,45 @@
-
-
-import {bloggersRepository} from "../repositories/bloggers-repository-db";
+import "reflect-metadata"
 import {
     BloggerInputModel,
-    BloggerModel,
     BloggerQuery,
     BloggerViewModel,
     PaginationBloggers
 } from "../types/blogger.type";
 import {ObjectId} from "mongodb";
+import {IBlogger} from "../models/blogger.model";
+import {injectable} from "inversify";
+import {BloggersRepository} from "../repositories/bloggers-repository-db";
 
-export const bloggersService= {
+@injectable()
+export class BloggersService{
+    constructor(
+        private bloggersRepository: BloggersRepository
+    ) {}
+
     async getBloggers(queryParams?: BloggerQuery): Promise<PaginationBloggers> {
-        return bloggersRepository.getBloggers(queryParams)
-    },
+        return await this.bloggersRepository.getBloggers(queryParams)
+    }
     async getBloggerById(id: ObjectId): Promise<BloggerViewModel | null> {
-        const blogger = await bloggersRepository.getBloggerById(id)
+        const blogger = await this.bloggersRepository.getBloggerById(id)
         if(!blogger) return null
         return {
             id: blogger._id.toString(),
             name: blogger.name,
             youtubeUrl: blogger.youtubeUrl
         }
-    },
+    }
     async deleteBloggerById(id: ObjectId): Promise<boolean> {
-        return await bloggersRepository.deleteBloggerById(id)
-    },
+        return await this.bloggersRepository.deleteBloggerById(id)
+    }
     async updateBloggerById(id: ObjectId, updateParam: BloggerInputModel): Promise<boolean> {
-        return await bloggersRepository.updateBloggerById(id, updateParam)
-    },
+        return await this.bloggersRepository.updateBloggerById(id, updateParam)
+    }
     async createBlogger(createParam: BloggerInputModel): Promise<BloggerViewModel>{
-        const newBlogger: BloggerModel = {
+        const newBlogger: IBlogger = {
             ...createParam,
             _id: new ObjectId()
         }
-        await bloggersRepository.createBlogger(newBlogger)
+        await this.bloggersRepository.createBlogger(newBlogger)
         return {
             id: newBlogger._id.toString(),
             name: newBlogger.name,

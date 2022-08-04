@@ -31,5 +31,4 @@ export type UserAccount = {
        expirationDate: Date,
        isConfirmed: boolean,
    }
-
 }
