@@ -90,6 +90,11 @@ export class AuthController{
     }
 
     async logoutUser(req: Request, res: Response){
+        const valid = await jwtService.decodeToken(req.cookies.refreshToken)
+        if(!valid) {
+            res.status(401).send('Unauthorized')
+            return
+        }
         const result = await jwtService.createInvalidToken(req.cookies.refreshToken)
         if(result) {
             res.clearCookie('refreshToken');
