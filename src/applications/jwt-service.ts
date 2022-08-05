@@ -27,8 +27,10 @@ export const jwtService = {
     async validateRefreshToken(refreshToken: string) {
         if (refreshToken) {
             try {
-                jwt.verify(refreshToken, '123')
-                return true
+                const token = jwt.verify(refreshToken, '123')
+                const user = await this.getUserIdByToken(refreshToken)
+                if(token && user) return true
+                return null
             }catch(err){
                 await this.createInvalidToken(refreshToken)
                 return null
