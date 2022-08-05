@@ -25,6 +25,8 @@ export const jwtService = {
         try{
             const result: any = jwt.verify(token, '123')
             if(Date.now() >= result.exp * 1000) return null
+            const badToken = await usersRepository.findBadToken(token)
+            if(badToken) return null
         }catch(err){
             return null
         }
