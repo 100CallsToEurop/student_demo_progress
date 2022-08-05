@@ -15,8 +15,10 @@ export const jwtService = {
     },
     async decodeToken(token: string){
         try{
+
             const result: any = jwt.verify(token, '123')
-            return result.userId
+            console.log(result)
+            return result
         }catch(err){
             return null
         }

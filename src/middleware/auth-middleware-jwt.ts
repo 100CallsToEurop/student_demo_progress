@@ -13,7 +13,7 @@ export const authMiddlewareJWT = async (req: Request, res: Response, next: NextF
     const user = await jwtService.decodeToken(token)
     if(user){
         const usersService = new UsersRepository()
-        req.user = await usersService.findUserById(new ObjectId(user.id))
+        req.user = await usersService.findUserById(new ObjectId(user.userId))
         next()
         return
     }
