@@ -6,7 +6,7 @@ import {ObjectId} from "mongodb";
 export const jwtService = {
     async createJWT(user: UserViewModel) {
         const accessToken = jwt.sign({userId: user.id}, '123', {expiresIn: 10})
-        const refreshToken = jwt.sign({userId: user.id}, '123', {expiresIn: 19})
+        const refreshToken = jwt.sign({userId: user.id}, '123', {expiresIn: 20})
         await usersRepository.updateRefreshToken(new ObjectId(user.id), refreshToken)
         return {
             accessToken,
@@ -22,16 +22,14 @@ export const jwtService = {
         }
     },
     async badToken(token: string){
-        try{
-            const result: any = jwt.verify(token, '123')
-            if(Date.now() >= result.exp * 1000) return null
-            return true
-
-            /*const badToken = await usersRepository.findBadToken(token)
-            if(badToken) return null*/
-        }catch(err){
-            return null
-        }
+        return jwt.verify(token, '123', (err, decode)=>{
+            if(err){
+                console.log('err')
+                return null
+            }else{
+                return decode as UserViewModel
+            }
+        })
     },
     async getUserIdByToken(token: string): Promise<UserViewModel | null> {
             const user = await usersRepository.findUserByRefreshToken(token)
