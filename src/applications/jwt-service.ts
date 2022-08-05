@@ -15,10 +15,16 @@ export const jwtService = {
     },
     async decodeToken(token: string){
         try{
-
             const result: any = jwt.verify(token, '123')
-            console.log(result)
             return result
+        }catch(err){
+            return null
+        }
+    },
+    async badToken(token: string){
+        try{
+            const result: any = jwt.verify(token, '123')
+            if(Date.now() >= result.exp * 1000) return null
         }catch(err){
             return null
         }

@@ -88,7 +88,7 @@ export class AuthController{
     }
 
     async logoutUser(req: Request, res: Response){
-        const validToken = await jwtService.validateRefreshToken(req.cookies.refreshToken)
+        const validToken = await jwtService.badToken(req.cookies.refreshToken)
         if(!validToken){
             res.status(401).json(401)
             return
