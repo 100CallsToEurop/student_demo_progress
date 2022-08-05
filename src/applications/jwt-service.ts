@@ -40,9 +40,12 @@ export const jwtService = {
         return null
     },
 
-    async createInvalidToken(token: string){
+    async createInvalidToken(token: string): Promise<boolean | null>{
         const user = await this.getUserIdByToken(token)
-        if(user) await usersRepository.addInBadToken(token)
+        if(user) {
+            await usersRepository.addInBadToken(token)
+            return true
+        }
         return null
     }
 }
