@@ -111,7 +111,7 @@ export class UsersRepository{
     }
 
     async findUserByRefreshToken(token: string):Promise<IUser | null>{
-        return UserModel.findOne({sessions: token})
+        return UserModel.findOne({"sessions.refreshToken": token})
     }
 
     async findBadToken(token: string):Promise<boolean>{
