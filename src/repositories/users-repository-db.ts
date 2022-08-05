@@ -114,9 +114,9 @@ export class UsersRepository{
         return UserModel.findOne({"sessions.refreshToken": token})
     }
 
-    async findBadToken(token: string):Promise<boolean>{
+    async findBadToken(token: string){
         const result =  await UserModel.findOne().where({"userInstance.sessions.badTokens":{$in: token}})
-        if(result) return true
+        if(result) return result
         return false
     }
 }
