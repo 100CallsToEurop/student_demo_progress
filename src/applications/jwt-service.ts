@@ -46,10 +46,7 @@ export const jwtService = {
         if (refreshToken) {
             try {
                 const token = jwt.verify(refreshToken, '123')
-                const user = await this.getUserIdByToken(refreshToken)
-                const badToken = await usersRepository.findBadToken(refreshToken)
-                if(token && user && !badToken) return true
-                return null
+
             }catch(err){
                 await this.createInvalidToken(refreshToken)
                 return null
