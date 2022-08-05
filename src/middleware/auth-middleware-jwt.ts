@@ -10,10 +10,10 @@ export const authMiddlewareJWT = async (req: Request, res: Response, next: NextF
     }
 
     const token = req.headers.authorization.split(" ")[1]
-    const userId = await jwtService.getUserIdByToken(token)
-    if(userId){
+    const user= await jwtService.getUserIdByToken(token)
+    if(user){
         const usersService = new UsersRepository()
-        req.user = await usersService.findUserById(new ObjectId(userId))
+        req.user = await usersService.findUserById(new ObjectId(user.id))
         next()
         return
     }

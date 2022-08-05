@@ -14,6 +14,9 @@ export interface IUser{
         expirationDate: Date,
         isConfirmed: boolean,
     }
+    sessions:{
+        refreshToken: string | null
+    }
 }
 
 const userSchema = new mongoose.Schema<IUser>({
@@ -28,6 +31,9 @@ const userSchema = new mongoose.Schema<IUser>({
         confirmationCode: { type: String, required: true },
         expirationDate: { type: Date, required: true },
         isConfirmed: { type: Boolean, required: true },
+    },
+    sessions:{
+        refreshToken: { type: String, default: null },
     }
 });
 

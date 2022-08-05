@@ -77,7 +77,7 @@ export class UsersRepository{
             await userInstance.save()
         return true
     }
-    async createUser(createParam: IUser): Promise<IUser>{
+    async createUser(createParam: Omit<IUser, 'sessions'>): Promise<Omit<IUser, 'sessions'>>{
         const userInstance = new UserModel()
         userInstance.accountData.userName = createParam.accountData.userName
         userInstance.accountData.email = createParam.accountData.email
@@ -88,6 +88,21 @@ export class UsersRepository{
         userInstance.emailConfirmation.isConfirmed = createParam.emailConfirmation.isConfirmed
         await userInstance.save()
         return createParam
+    }
+
+    async updateRefreshToken(_id: ObjectId, param: string | null): Promise<boolean | null>{
+        const userInstance = await UserModel.findOne({_id})
+        if(userInstance){
+            userInstance.sessions.refreshToken = param,
+            await userInstance.save()
+            return true
+        }
+        return false
+    }
+
+    async findUserByRefreshToken(token: string):Promise<IUser | null>{
+        return UserModel.findOne({sessions: token})
+
     }
 }
 

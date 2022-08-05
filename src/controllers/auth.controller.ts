@@ -67,10 +67,13 @@ export class AuthController{
     }
 
     async refreshTokenUser(req: Request, res: Response){
-        console.log(req.cookies)
         const validToken = await jwtService.validateRefreshToken(req.cookies.refreshToken)
         if(validToken){
-            const user = await jwtService.getUserIdByToken(validToken)
+            const user = await jwtService.getUserIdByToken(req.cookies.refreshToken)
+            if(!user) {
+                res.status(401).send('Unauthorized')
+                return
+            }
             const token = await jwtService.createJWT(user)
             res.cookie('refreshToken', token.refreshToken, {
                 maxAge: 20 * 1000,
@@ -84,6 +87,7 @@ export class AuthController{
     }
 
     async logoutUser(req: Request, res: Response){
+        await jwtService.createInvalidToken(req.cookies.refreshToken)
         res.clearCookie('refreshToken');
         res.status(204).json(204)
     }
