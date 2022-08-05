@@ -88,11 +88,11 @@ export class AuthController{
     }
 
     async logoutUser(req: Request, res: Response){
-        const validToken = await jwtService.badToken(req.cookies.refreshToken)
+       /* const validToken = await jwtService.badToken(req.cookies.refreshToken)
         if(!validToken){
             res.status(401).json(401)
             return
-        }
+        }*/
         const result = await jwtService.createInvalidToken(req.cookies.refreshToken)
         if(result) {
             res.clearCookie('refreshToken');
