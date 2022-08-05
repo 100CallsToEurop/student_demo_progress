@@ -7,6 +7,8 @@ import {RegistrationConfirmationCodeModel, RegistrationEmailResending} from "../
 import {AuthService} from "../domian/auth.service";
 import {jwtService} from "../applications/jwt-service";
 import {LoginInputModel} from "../types/login.type";
+import {UsersRepository} from "../repositories/users-repository-db";
+import {ObjectId} from "mongodb";
 
 @injectable()
 export class AuthController{
@@ -65,8 +67,9 @@ export class AuthController{
     }
 
     async refreshTokenUser(req: Request, res: Response){
-        const user = await this.usersService.findUserById(req.user!._id)
-        if(user){
+        const validToken = await jwtService.validateRefreshToken(req.cookies.refreshToken)
+        if(validToken){
+            const user = await jwtService.getUserIdByToken(validToken)
             const token = await jwtService.createJWT(user)
             res.cookie('refreshToken', token.refreshToken, {
                 maxAge: 20 * 1000,

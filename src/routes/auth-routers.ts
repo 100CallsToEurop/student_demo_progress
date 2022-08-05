@@ -12,7 +12,7 @@ import {inputValidatorMiddleware} from "../middleware/input-validator-middleware
 import {container} from "../composition-root";
 import {AuthController} from "../controllers/auth.controller";
 import {authMiddlewareJWT} from "../middleware/auth-middleware-jwt";
-import {validRefreshToken} from "../middleware/valid-refresh-middleware";
+
 
 
 const authController = container.resolve(AuthController)
@@ -43,8 +43,6 @@ authRouter.post('/registration-confirmation', checkLimitReq,
     authController.registrationConfirmationUser.bind(authController))
 
 authRouter.post('/refresh-token',
-    validRefreshToken,
-    inputValidatorMiddleware,
     authController.refreshTokenUser.bind(authController))
 
 authRouter.post('/logout',
