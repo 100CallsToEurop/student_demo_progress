@@ -67,7 +67,10 @@ export class AuthController{
     }
 
     async refreshTokenUser(req: Request, res: Response){
-        await jwtService.badToken(req.cookies.refreshToken)
+        if(await jwtService.badToken(req.cookies.refreshToken)) {
+            res.status(401).send('Unauthorized')
+            return
+        }
             const user = await jwtService.getUserIdByToken(req.cookies.refreshToken)
             if(!user) {
                 res.status(401).send('Unauthorized')

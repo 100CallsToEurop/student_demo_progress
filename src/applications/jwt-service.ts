@@ -22,14 +22,13 @@ export const jwtService = {
         }
     },
     async badToken(token: string){
-        return jwt.verify(token, '123', (err, decode)=>{
-            if(err){
-                console.log('err')
-                return null
-            }else{
-                return decode as UserViewModel
-            }
-        })
+        try{
+            jwt.verify(token, '123')
+            return true
+        }catch(err){
+            return null
+        }
+
     },
     async getUserIdByToken(token: string): Promise<UserViewModel | null> {
             const user = await usersRepository.findUserByRefreshToken(token)
