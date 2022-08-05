@@ -6,7 +6,7 @@ import {ObjectId} from "mongodb";
 export const jwtService = {
     async createJWT(user: UserViewModel) {
         const accessToken = jwt.sign({userId: user.id}, '123', {expiresIn: 10})
-        const refreshToken = jwt.sign({userId: user.id}, '123', {expiresIn: 20})
+        const refreshToken = jwt.sign({userId: user.id}, '123', {expiresIn: 19})
         await usersRepository.updateRefreshToken(new ObjectId(user.id), refreshToken)
         return {
             accessToken,
