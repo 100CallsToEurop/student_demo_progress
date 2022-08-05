@@ -90,19 +90,34 @@ export class UsersRepository{
         return createParam
     }
 
-    async updateRefreshToken(_id: ObjectId, param: string | null): Promise<boolean | null>{
+    async updateRefreshToken(_id: ObjectId, token: string | null): Promise<boolean | null>{
         const userInstance = await UserModel.findOne({_id})
         if(userInstance){
-            userInstance.sessions.refreshToken = param,
+            userInstance.sessions.refreshToken = token,
             await userInstance.save()
             return true
         }
         return false
     }
 
+    async addInBadToken(token: string): Promise<void>{
+        const userInstance = await UserModel.findOne({"sessions.refreshToken": token})
+        if(userInstance){
+                userInstance.sessions.badTokens.push(userInstance.sessions.refreshToken!)
+                userInstance.sessions.refreshToken = null
+                await userInstance.save()
+
+        }
+    }
+
     async findUserByRefreshToken(token: string):Promise<IUser | null>{
         return UserModel.findOne({sessions: token})
+    }
 
+    async findBadToken(token: string):Promise<boolean>{
+        const result =  await UserModel.findOne().where({"userInstance.sessions.badTokens":{$in: token}})
+        if(result) return true
+        return false
     }
 }
 

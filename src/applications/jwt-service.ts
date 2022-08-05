@@ -29,7 +29,8 @@ export const jwtService = {
             try {
                 const token = jwt.verify(refreshToken, '123')
                 const user = await this.getUserIdByToken(refreshToken)
-                if(token && user) return true
+                const badToken = await usersRepository.findBadToken(refreshToken)
+                if(token && user && !badToken) return true
                 return null
             }catch(err){
                 await this.createInvalidToken(refreshToken)
@@ -41,7 +42,7 @@ export const jwtService = {
 
     async createInvalidToken(token: string){
         const user = await this.getUserIdByToken(token)
-        if(user) await usersRepository.updateRefreshToken(new ObjectId(user.id), null)
+        if(user) await usersRepository.addInBadToken(token)
         return null
     }
 }

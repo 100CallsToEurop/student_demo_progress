@@ -15,7 +15,8 @@ export interface IUser{
         isConfirmed: boolean,
     }
     sessions:{
-        refreshToken: string | null
+        refreshToken: string | null,
+        badTokens: Array<string>
     }
 }
 
@@ -34,6 +35,7 @@ const userSchema = new mongoose.Schema<IUser>({
     },
     sessions:{
         refreshToken: { type: String, default: null },
+        badTokens: [String]
     }
 });
 
