@@ -20,7 +20,7 @@ const port = process.env.PORT || 5000
 const app = express()
 
 app.use(cors())
-app.use(cookieParser());
+app.use(cookieParser())
 app.use(jsonMiddleware)
 app.set('trust proxy', true);
 

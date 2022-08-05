@@ -67,6 +67,7 @@ export class AuthController{
     }
 
     async refreshTokenUser(req: Request, res: Response){
+        console.log(req.cookies)
         const validToken = await jwtService.validateRefreshToken(req.cookies.refreshToken)
         if(validToken){
             const user = await jwtService.getUserIdByToken(validToken)
